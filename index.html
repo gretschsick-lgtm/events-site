@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>イベント一覧｜テストサイト</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+      background: #0f0f12;
+      color: #fff;
+    }
+    header {
+      padding: 24px 16px;
+      background: linear-gradient(135deg, #1f1f26, #111);
+      border-bottom: 1px solid #333;
+    }
+    h1 { margin: 0; font-size: 24px; }
+    .sub { color: #aaa; margin-top: 6px; font-size: 13px; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 16px; }
+    .controls { display: flex; gap: 8px; margin: 16px 0; }
+    input {
+      width: 100%; padding: 12px; border-radius: 10px;
+      border: 1px solid #333; background: #18181d; color: #fff;
+    }
+    .card {
+      background: #18181d;
+      border: 1px solid #2d2d35;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.25);
+    }
+    .top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .store { font-size: 18px; font-weight: bold; }
+    .date { color: #ffd166; font-weight: bold; white-space: nowrap; }
+    .meta { color: #bbb; font-size: 13px; margin-top: 8px; }
+    .detail { margin-top: 10px; line-height: 1.6; }
+    .links { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+    a {
+      color: #fff; text-decoration: none; background: #2d6cdf;
+      padding: 9px 12px; border-radius: 999px; font-size: 13px;
+    }
+    a.x { background: #111; border: 1px solid #555; }
+    .empty { color:#aaa; padding: 24px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>イベント一覧</h1>
+      <div class="sub">テスト公開用ページ</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="controls">
+      <input id="search" placeholder="店舗名・地域・演者名で検索" />
+    </div>
+    <div id="app"></div>
+  </main>
+
+  <script>
+    let allEvents = [];
+
+    function render(events) {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+
+      if (!events.length) {
+        app.innerHTML = '<div class="empty">表示できるイベントがありません。</div>';
+        return;
+      }
+
+      events.forEach(ev => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <div class="top">
+            <div>
+              <div class="store">${ev.store || '店舗名未取得'}</div>
+              <div class="meta">${ev.pref || ''} ${ev.area ? ' / ' + ev.area : ''}</div>
+            </div>
+            <div class="date">${ev.date || ''}</div>
+          </div>
+          <div class="detail">
+            <strong>${ev.event || 'イベント'}</strong><br>
+            ${ev.detail || ''}
+            ${ev.cast ? `<br>出演・来店：${ev.cast}` : ''}
+          </div>
+          <div class="links">
+            ${ev.url ? `<a href="${ev.url}" target="_blank" rel="noopener">詳細を見る</a>` : ''}
+            ${ev.x_url ? `<a class="x" href="${ev.x_url}" target="_blank" rel="noopener">店舗X</a>` : ''}
+          </div>
+        `;
+        app.appendChild(div);
+      });
+    }
+
+    fetch('./events_public.json')
+      .then(res => res.json())
+      .then(data => {
+        allEvents = data.events || [];
+        render(allEvents);
+      })
+      .catch(() => {
+        document.getElementById('app').innerHTML = '<div class="empty">events_public.json が見つかりません。</div>';
+      });
+
+    document.getElementById('search').addEventListener('input', e => {
+      const q = e.target.value.trim().toLowerCase();
+      const filtered = allEvents.filter(ev => JSON.stringify(ev).toLowerCase().includes(q));
+      render(filtered);
+    });
+  </script>
+</body>
+</html>
